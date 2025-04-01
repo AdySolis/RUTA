@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimización de Rutas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY&libraries=places"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label, input, select { display: block; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <h2>Optimización de Rutas para Técnicos</h2>
+    <form id="routeForm">
+        <label>Técnico:</label>
+        <input type="text" id="technician" required>
+        <label>Medio de transporte:</label>
+        <select id="transport">
+            <option value="auto">Automóvil</option>
+            <option value="public">Transporte Público</option>
+        </select>
+        <label>Cliente (Dirección o Nombre):</label>
+        <input type="text" id="client">
+        <label>Hora Compromiso:</label>
+        <input type="time" id="time">
+        <button type="button" onclick="addService()">Agregar Servicio</button>
+    </form>
+    <h3>Servicios Programados</h3>
+    <table id="servicesTable">
+        <tr>
+            <th>Técnico</th>
+            <th>Transporte</th>
+            <th>Cliente</th>
+            <th>Hora Compromiso</th>
+            <th>Ruta</th>
+        </tr>
+    </table>
+    <button onclick="generateExcel()">Generar Excel</button>
+    
+    <script>
+        let services = [];
+        
+        function addService() {
+            let technician = document.getElementById("technician").value;
+            let transport = document.getElementById("transport").value;
+            let client = document.getElementById("client").value;
+            let time = document.getElementById("time").value;
+            
+            if (technician && client && time) {
+                let mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(client)}`;
+                let wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(client)}`;
+                
+                services.push({ technician, transport, client, time, mapsUrl, wazeUrl });
+                updateTable();
+            }
+        }
+        
+        function updateTable() {
+            let table = document.getElementById("servicesTable");
+            table.innerHTML = "<tr><th>Técnico</th><th>Transporte</th><th>Cliente</th><th>Hora Compromiso</th><th>Ruta</th></tr>";
+            services.forEach(s => {
+                let row = table.insertRow();
+                row.insertCell(0).textContent = s.technician;
+                row.insertCell(1).textContent = s.transport;
+                row.insertCell(2).textContent = s.client;
+                row.insertCell(3).textContent = s.time;
+                let cell = row.insertCell(4);
+                cell.innerHTML = `<a href='${s.mapsUrl}' target='_blank'>Google Maps</a> | <a href='${s.wazeUrl}' target='_blank'>Waze</a>`;
+            });
+        }
+        
+        function generateExcel() {
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.json_to_sheet(services);
+            XLSX.utils.book_append_sheet(wb, ws, "Rutas");
+            XLSX.writeFile(wb, "rutas_tecnicos.xlsx");
+        }
+    </script>
+</body>
+</html>
